@@ -1,0 +1,31 @@
+# Build outputs and local IDE settings
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.DotSettings.user
+# Local profiles and credentials
+**/profile/
+**/EBWebView/
+**/Settings.json
+*.pfx
+*.snk
+.env
+.env.*
+# Local maintenance history and generated previews
+/*backup*/
+/removed-*/
+/.local-work/
+*.log
+/*.png
+/*.py
+/*-fragment.xml
+/*-backup-*.xaml
+/magick-audit-*.json
+# Local verification only; do not upload tests or their artifacts
+/tests/
+
+# Local backup and update credentials
+*.bak
+github-update-token.dat

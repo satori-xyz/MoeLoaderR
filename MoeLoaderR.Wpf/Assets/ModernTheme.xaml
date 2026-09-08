@@ -1,0 +1,91 @@
+<?xml version="1.0" ?><ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <SolidColorBrush x:Key="MoeTextBoxBackgroundBrush" Color="White"/>
+ <SolidColorBrush x:Key="MoeButtonStrokeBrush" Color="#DFE3EC"/>
+ <SolidColorBrush x:Key="MoeImageBorderBrush" Color="#EFF1F5"/>
+ <SolidColorBrush x:Key="MoeDefaultModeBlueBrush" Color="#F7F8FA"/>
+ <SolidColorBrush x:Key="MoeCustomSitePinkBrush" Color="#F7F8FA"/>
+ <ControlTemplate x:Key="MoeButtonControlTemplate" TargetType="ButtonBase">
+  <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="#DFE3EC" BorderThickness="1" CornerRadius="6" Padding="8,4"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+  <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#817BE7"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Opacity" Value="0.72"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers>
+ </ControlTemplate>
+ <Style TargetType="Button"><Setter Property="Background" Value="White"/><Setter Property="Foreground" Value="#303546"/><Setter Property="Template" Value="{StaticResource MoeButtonControlTemplate}"/><Setter Property="Cursor" Value="Hand"/></Style>
+ <Style x:Key="ModernNavButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Height" Value="42"/><Setter Property="Background" Value="#E6E7FC"/><Setter Property="Foreground" Value="#4F46D9"/><Setter xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="16,8"><ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/></Border></ControlTemplate></Setter.Value></Setter><Setter Property="FontSize" Value="14"/></Style>
+ <Style x:Key="ModernNavCheckBox" TargetType="CheckBox"><Setter Property="Height" Value="42"/><Setter Property="Foreground" Value="#555B6D"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><Border x:Name="Surface" CornerRadius="6" Background="Transparent" Padding="16,8"><ContentPresenter VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#E9ECF3"/></Trigger><Trigger Property="IsChecked" Value="True"><Setter TargetName="Surface" Property="Background" Value="#E6E7FC"/><Setter Property="Foreground" Value="#4F46D9"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter><Setter Property="FontSize" Value="14"/></Style>
+ <ControlTemplate x:Key="MoeSitesComboBoxControlTemplate" TargetType="ComboBox">
+  <Grid><ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"><ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border Background="White" BorderBrush="#DFE3EC" BorderThickness="1" CornerRadius="6"><TextBlock Text="⌄" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,9,0" Foreground="#727889"/></Border></ControlTemplate></ToggleButton.Template></ToggleButton>
+   <ContentPresenter Margin="9,0,26,0" VerticalAlignment="Center" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+   <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False"><Border Background="White" BorderBrush="#DFE3EC" BorderThickness="1" CornerRadius="6" Padding="4" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"><ScrollViewer MaxHeight="360" CanContentScroll="True"><ItemsPresenter/></ScrollViewer></Border></Popup>
+  </Grid>
+ </ControlTemplate>
+ <Style x:Key="MoeNormalComboBoxItemStyle" TargetType="ComboBoxItem"><Setter Property="Padding" Value="10,7"/><Setter Property="Foreground" Value="#303546"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Surface" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Surface" Property="Background" Value="#EEF0FF"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="#4F46D9"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <ControlTemplate x:Key="ImageItemCheckBoxControlTemplate" TargetType="CheckBox"><Grid><Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="#E1E5ED" BorderThickness="3" CornerRadius="8" Padding="1"><ContentPresenter/></Border><Border x:Name="Selection" Background="#4F46D9" CornerRadius="13" Width="26" Height="26" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="8" Visibility="Collapsed" IsHitTestVisible="False" BorderBrush="White" BorderThickness="2"><TextBlock Text="✓" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" FontWeight="Bold"/></Border></Grid><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#9D98EA"/></Trigger><Trigger Property="IsChecked" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#4F46D9"/><Setter TargetName="Selection" Property="Visibility" Value="Visible"/></Trigger></ControlTemplate.Triggers></ControlTemplate>
+ <ControlTemplate x:Key="MoeImageOperateButtonControlTemplate" TargetType="Button"><Border x:Name="Surface" Background="#DC303546" CornerRadius="5" Padding="4"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#4F46D9"/></Trigger></ControlTemplate.Triggers></ControlTemplate>
+ <ControlTemplate x:Key="NextButtonTemplate" TargetType="Button"><Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="6" Margin="3"><ContentPresenter Margin="4"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#9E98EA"/><Setter TargetName="Surface" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers></ControlTemplate>
+ <Style x:Key="MoePopupBorderStyle" TargetType="Border"><Setter Property="Background" Value="White"/><Setter Property="BorderBrush" Value="#DFE3EC"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="8"/><Setter Property="Padding" Value="12"/></Style>
+<ControlTemplate x:Key="ModernDownloadProgress" TargetType="ProgressBar"><Grid Height="4"><Border x:Name="PART_Track" Background="#E8EBF3" CornerRadius="2"/><Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="2" HorizontalAlignment="Left"/></Grid></ControlTemplate><ControlTemplate x:Key="MoeDownloaderItemsListBoxControlTemplate" TargetType="ListBox"><ScrollViewer x:Name="PART_ScrollViewer" Focusable="False" CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"><ItemsPresenter/></ScrollViewer></ControlTemplate><Style x:Key="MoeDownloaderListBoxItemStyle" TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Margin" Value="0,0,0,8"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Surface" Background="White" BorderBrush="#E1E5EE" BorderThickness="1" CornerRadius="7" Padding="10"><StackPanel>
+<Grid><Grid.ColumnDefinitions><ColumnDefinition Width="48"/><ColumnDefinition/></Grid.ColumnDefinitions><Border Background="#F0F2F7" CornerRadius="5" Width="40" Height="40" VerticalAlignment="Top"><Image Source="{Binding BitImg}" Stretch="Uniform"/></Border><StackPanel Grid.Column="1"><TextBlock Text="{Binding LocalFileShortNameWithoutExt}" ToolTip="{Binding LocalFileShortNameWithoutExt}" TextTrimming="CharacterEllipsis" Foreground="#303546" FontSize="12"/><TextBlock x:Name="Status" Text="{Binding StatusText}" Foreground="#858B9B" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,5,0,7" ToolTip="{Binding StatusText}"/><ProgressBar x:Name="Progress" Value="{Binding Progress}" Foreground="#5B52DC" Template="{StaticResource ModernDownloadProgress}" Height="4"/></StackPanel></Grid>
+<Expander Margin="0,8,0,0" Foreground="#727889" Header="{Binding ChildrenItems.Count, StringFormat=展开 {0} 张图片}"><Expander.Style><Style TargetType="Expander"><Style.Triggers><DataTrigger Binding="{Binding ChildrenItems.Count}" Value="0"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></Expander.Style><ItemsControl ItemsSource="{Binding ChildrenItems}"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="12,8,0,0"><TextBlock Text="{Binding LocalFileShortNameWithoutExt}" FontSize="11" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding StatusText}" FontSize="10" Foreground="#858B9B"/><ProgressBar Value="{Binding Progress}" Template="{StaticResource ModernDownloadProgress}" Foreground="#5B52DC" Margin="0,4,0,0"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></Expander>
+</StackPanel></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#B6B1EC"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Surface" Property="Background" Value="#F0EFFF"/><Setter TargetName="Surface" Property="BorderBrush" Value="#736BE4"/></Trigger><DataTrigger Binding="{Binding DlStatus}" Value="Success"><Setter TargetName="Status" Property="Foreground" Value="#21855B"/><Setter TargetName="Progress" Property="Foreground" Value="#36A477"/></DataTrigger><DataTrigger Binding="{Binding DlStatus}" Value="Failed"><Setter TargetName="Status" Property="Foreground" Value="#C35151"/><Setter TargetName="Progress" Property="Foreground" Value="#C35151"/></DataTrigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style><ControlTemplate x:Key="MoeThumbControlTemplate" TargetType="Thumb"><Border x:Name="Grip" Background="#635BE3" CornerRadius="5" Margin="3,1"/><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="Background" Value="#4F46D9"/></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="Grip" Property="Background" Value="#3930B5"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Grip" Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers></ControlTemplate><Style x:Key="SimpleThumbStyle" TargetType="Thumb"><Setter Property="Template" Value="{StaticResource MoeThumbControlTemplate}"/></Style><Style TargetType="ScrollBar" BasedOn="{StaticResource SimpleScrollBar}"/><Style x:Key="SimpleSliderThumb" TargetType="Thumb"><Setter Property="Width" Value="17"/><Setter Property="Height" Value="17"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Thumb"><Ellipse x:Name="Grip" Fill="#4F46D9" Stroke="White" StrokeThickness="2"/><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="Fill" Value="#3930B5"/></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="Grip" Property="Fill" Value="#2F268F"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Grip" Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style><Style x:Key="SimpleSlider" TargetType="{x:Type Slider}">
+        <Setter Property="Background" Value="#CECBF5"/>
+        <Setter Property="BorderBrush" Value="#CECBF5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Slider}">
+                    <Grid x:Name="GridRoot">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto" MinHeight="{TemplateBinding MinHeight}"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- TickBar shows the ticks for Slider -->
+                        <TickBar Visibility="Collapsed" x:Name="TopTick" Height="4" SnapsToDevicePixels="True" Placement="Top" Fill="{DynamicResource GlyphBrush}"/>
+                        <Border Grid.Row="1" Margin="0" x:Name="Border" Height="4" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2"/>
+                        
+                        <!-- The Track lays out the repeat buttons and thumb -->
+                        <Track Grid.Row="1" x:Name="PART_Track">
+                            <Track.Thumb>
+                                <Thumb Style="{DynamicResource SimpleSliderThumb}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Style="{DynamicResource SimpleScrollRepeatButtonStyle}" Command="Slider.IncreaseLarge"/>
+                            </Track.IncreaseRepeatButton>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Style="{DynamicResource SimpleScrollRepeatButtonStyle}" Command="Slider.DecreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Height="4" Background="#635BE3" CornerRadius="2"/></ControlTemplate></RepeatButton.Template></RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                        </Track>
+                        
+                        <TickBar Visibility="Collapsed" Grid.Row="2" x:Name="BottomTick" Height="4" SnapsToDevicePixels="True" Placement="Bottom" Fill="{TemplateBinding Foreground}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="TickPlacement" Value="TopLeft">
+                            <Setter Property="Visibility" Value="Visible" TargetName="TopTick"/>
+                        </Trigger>
+                        <Trigger Property="TickPlacement" Value="BottomRight">
+                            <Setter Property="Visibility" Value="Visible" TargetName="BottomTick"/>
+                        </Trigger>
+                        <Trigger Property="TickPlacement" Value="Both">
+                            <Setter Property="Visibility" Value="Visible" TargetName="TopTick"/>
+                            <Setter Property="Visibility" Value="Visible" TargetName="BottomTick"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Background" Value="{DynamicResource DisabledBackgroundBrush}" TargetName="Border"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource DisabledBorderBrush}" TargetName="Border"/>
+                        </Trigger>
+                        
+                        <!-- Use a rotation to create a Vertical Slider form the default Horizontal -->
+                        <Trigger Property="Orientation" Value="Vertical">
+                            <Setter Property="LayoutTransform" TargetName="GridRoot">
+                                <Setter.Value>
+                                    <RotateTransform Angle="-90"/>
+                                </Setter.Value>
+                            </Setter>
+                            <!-- Track rotates itself based on orientation so need to force it back -->
+                            <Setter TargetName="PART_Track" Property="Orientation" Value="Horizontal"/>
+                        </Trigger>
+                        
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style></ResourceDictionary>

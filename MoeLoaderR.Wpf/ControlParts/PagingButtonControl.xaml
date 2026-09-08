@@ -1,0 +1,36 @@
+<?xml version="1.0" ?><UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:MoeLoaderR.Wpf.ControlParts" x:Class="MoeLoaderR.Wpf.ControlParts.PagingButtonControl" mc:Ignorable="d" d:DesignHeight="64" d:DesignWidth="64" FontFamily="Microsoft YaHei">
+    <Grid>
+        <Button x:Name="PageButton" Template="{DynamicResource NextButtonTemplate}">
+            <Grid VerticalAlignment="Stretch">
+                <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
+                    <Viewbox.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Viewbox.RenderTransform>
+                    <TextBlock x:Name="LoadingIcon" FontFamily="{DynamicResource SystemIconFont}" FontSize="96" RenderTransformOrigin="0.5,0.5" Foreground="Black" Width="96" Height="96" Opacity="0" Visibility="Hidden" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform/>
+                                <SkewTransform/>
+                                <RotateTransform Angle="0"/>
+                                <TranslateTransform/>
+                            </TransformGroup>
+                        </TextBlock.RenderTransform><Run Text=""/></TextBlock>
+                </Viewbox>
+                <Grid x:Name="PageNumGrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <TextBlock x:Name="PageNumTextBlock" Text="XX" TextWrapping="Wrap" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Grid x:Name="MultiPageNumTextGrid">
+                        <TextBlock x:Name="PageStartNumTextBlock" Text="Start" TextWrapping="Wrap" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-25,15,0"/>
+                        <TextBlock Text="~" TextWrapping="Wrap" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="PageEndNumTextBlock" Text="End" TextWrapping="Wrap" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,25,-15,0"/>
+                    </Grid>
+                </Grid>
+                <TextBlock x:Name="NextIconTextBlock" TextWrapping="Wrap" Text="" FontFamily="{DynamicResource SystemIconFont}" FontSize="18" Visibility="Visible" HorizontalAlignment="Center" VerticalAlignment="Center" d:IsHidden="True"/>
+            </Grid>
+        </Button>
+    </Grid>
+</UserControl>

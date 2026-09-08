@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "MoeLoaderR.Wpf": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false,
+      "authenticationMode": "None"
+    }
+  }
+}

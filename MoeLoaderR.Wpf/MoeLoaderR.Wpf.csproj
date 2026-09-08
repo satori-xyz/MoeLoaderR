@@ -1,0 +1,156 @@
+<?xml version="1.0" ?><Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
+    
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>MoeLoaderR</AssemblyName>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <ProductName>MoeLoaderR</ProductName>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <UseWPF>true</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Assets\moeloaderr.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>MoeLoaderR.Wpf.App</StartupObject>
+  </PropertyGroup>
+  
+  
+  
+  
+  
+  
+  
+  
+  <ItemGroup>
+    <None Remove="Assets\SiteIcon\default.png"/>
+    <None Remove="Assets\SiteIcon\deviantart.ico"/>
+    <None Remove="Assets\SiteIcon\konachan-g.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\"/>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\atfbooru.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\3dBooru.ico"/>
+    <Resource Include="Assets\SiteIcon\default.png"/>
+    <Resource Include="Assets\SiteIcon\deviantart.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\danbooru.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\e-shu.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\gelbooru.ico"/>
+    <Resource Include="Assets\SiteIcon\konachan-g.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\sankakucomplex-idol.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\kawaiinyan.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\konachan.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\lolibooru.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\minitokyo.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\anime-pictures.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\pixiv.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\rule34.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\safebooru.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\worldcosplay.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\yande.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\yuriimg.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\zerochan.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5"/>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47"/>
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="10.0.11"/>
+    <PackageReference Include="VirtualizingWrapPanel" Version="2.5.4"/>
+    <PackageReference Include="XamlAnimatedGif" Version="2.3.2"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\bilibili.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\moeloaderr.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SiteIcon\sankakucomplex-chan.ico"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Remove="Simple Styles.xaml"/>
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Nullable>disable</Nullable>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link="Properties\.editorconfig"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MoeLoaderR.Core\MoeLoaderR.Core.csproj"/>
+  </ItemGroup>
+</Project>
