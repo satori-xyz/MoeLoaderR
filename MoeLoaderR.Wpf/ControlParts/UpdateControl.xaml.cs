@@ -25,17 +25,6 @@ public partial class UpdateControl
         InstallButton.Click += (_, _) => Install();
         CancelButton.Click += (_, _) => _operation?.Cancel();
         Unloaded += (_, _) => { _operation?.Cancel(); DiscardDownload(); };
-        SaveTokenButton.Click += (_, _) =>
-        {
-            if (string.IsNullOrWhiteSpace(TokenBox.Password)) { StatusText.Text = "请先填写令牌。"; return; }
-            try { GitHubUpdateSupport.SaveToken(TokenBox.Password); TokenBox.Clear(); StatusText.Text = "授权已在本机加密保存。"; }
-            catch { StatusText.Text = "保存授权失败，请检查配置目录权限。"; }
-        };
-        ClearTokenButton.Click += (_, _) =>
-        {
-            try { GitHubUpdateSupport.SaveToken(null); TokenBox.Clear(); StatusText.Text = "已清除保存的授权；仍可使用本机 GitHub CLI 登录。"; }
-            catch { StatusText.Text = "清除授权失败，请检查配置目录权限。"; }
-        };
     }
 
     public void Init(Settings settings) => _settings = settings;
@@ -64,10 +53,8 @@ public partial class UpdateControl
         DiscardDownload();
         DownloadButton.Visibility = InstallButton.Visibility = DownloadProgress.Visibility = Visibility.Collapsed;
         StatusText.Text = "正在检查 GitHub Release…";
-        var credential = await GitHubUpdateSupport.GetTokenAsync(token);
-        if (string.IsNullOrEmpty(credential)) throw new InvalidOperationException("请先在“GitHub 授权”中填写令牌，或使用 GitHub CLI 登录。");
         using var http = GitHubUpdateSupport.CreateClient(_settings);
-        _release = await new GitHubUpdateClient(http).CheckAsync(_current, credential, token);
+        _release = await new GitHubUpdateClient(http).CheckAsync(_current, token);
         if (_release == null) { StatusText.Text = "当前已是最新正式版本。"; return; }
         DownloadButton.Visibility = Visibility.Visible;
         StatusText.Text = $"发现 {_release.Tag}，下载大小约 {_release.Size / 1024d / 1024d:F1} MiB。";
@@ -83,8 +70,7 @@ public partial class UpdateControl
         InstallButton.Visibility = Visibility.Collapsed;
         StatusText.Text = "正在下载更新…";
         using var http = GitHubUpdateSupport.CreateClient(_settings);
-        var credential = await GitHubUpdateSupport.GetTokenAsync(token);
-        await new GitHubUpdateClient(http).DownloadAsync(_release, credential, path, new Progress<int>(value =>
+        await new GitHubUpdateClient(http).DownloadAsync(_release, path, new Progress<int>(value =>
         {
             DownloadProgress.Value = value;
             StatusText.Text = $"正在下载更新：{value}%";

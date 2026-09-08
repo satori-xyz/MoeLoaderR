@@ -25,7 +25,7 @@ public sealed class GitHubUpdateClient(HttpClient client)
         return new Version(version.Major, version.Minor, Math.Max(0, version.Build), Math.Max(0, version.Revision));
     }
 
-    private static HttpRequestMessage Request(Uri url, string token, string accept)
+    private static HttpRequestMessage Request(Uri url, string accept)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.UserAgent.ParseAdd("MoeLoaderR-Updater/0.1");
@@ -33,19 +33,18 @@ public sealed class GitHubUpdateClient(HttpClient client)
         if (url.Host == "api.github.com")
         {
             request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
-            if (!string.IsNullOrWhiteSpace(token)) request.Headers.Authorization = new("Bearer", token.Trim());
         }
         return request;
     }
 
-    public async Task<UpdateRelease> CheckAsync(Version current, string token, CancellationToken cancellationToken)
+    public async Task<UpdateRelease> CheckAsync(Version current, CancellationToken cancellationToken)
     {
-        using var request = Request(new Uri($"https://api.github.com/repos/{Repository}/releases/latest"), token, "application/vnd.github+json");
+        using var request = Request(new Uri($"https://api.github.com/repos/{Repository}/releases/latest"), "application/vnd.github+json");
         using var response = await client.SendAsync(request, cancellationToken);
         if (response.StatusCode == HttpStatusCode.NotFound)
-            throw new InvalidOperationException("暂无正式发布，或当前账号无权访问此私有仓库。");
+            throw new InvalidOperationException("暂无正式发布，或更新源不可用。");
         if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
-            throw new InvalidOperationException("GitHub 授权无效、权限不足或请求受限，请检查登录授权后重试。");
+            throw new InvalidOperationException("GitHub 请求受限或暂时不可用，请稍后重试。");
         response.EnsureSuccessStatusCode();
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
         var root = json.RootElement;
@@ -74,10 +73,10 @@ public sealed class GitHubUpdateClient(HttpClient client)
         return true;
     }
 
-    public async Task DownloadAsync(UpdateRelease release, string token, string destination, IProgress<int> progress, CancellationToken cancellationToken)
+    public async Task DownloadAsync(UpdateRelease release, string destination, IProgress<int> progress, CancellationToken cancellationToken)
     {
         if (File.Exists(destination)) throw new IOException("更新缓存文件已存在，请重试。");
-        using var request = Request(release.AssetUrl, token, "application/octet-stream");
+        using var request = Request(release.AssetUrl, "application/octet-stream");
         using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         HttpResponseMessage redirected = null;
         try
@@ -89,7 +88,7 @@ public sealed class GitHubUpdateClient(HttpClient client)
                 if (location == null || !location.IsAbsoluteUri || location.Scheme != "https" ||
                     !(location.Host == "github.com" || location.Host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase)))
                     throw new InvalidDataException("GitHub 下载重定向地址无效。");
-                using var follow = Request(location, null, "application/octet-stream");
+                using var follow = Request(location, "application/octet-stream");
                 redirected = await client.SendAsync(follow, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 payload = redirected;
             }

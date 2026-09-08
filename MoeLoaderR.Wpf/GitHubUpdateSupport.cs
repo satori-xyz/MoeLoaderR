@@ -14,42 +14,6 @@ namespace MoeLoaderR.Wpf;
 
 public static class GitHubUpdateSupport
 {
-    private static string CredentialPath => Path.Combine(App.AppDataDir, "github-update-token.dat");
-
-    public static void SaveToken(string token)
-    {
-        if (string.IsNullOrWhiteSpace(token)) { if (File.Exists(CredentialPath)) File.Delete(CredentialPath); return; }
-        File.WriteAllBytes(CredentialPath, ProtectedData.Protect(Encoding.UTF8.GetBytes(token.Trim()), null, DataProtectionScope.CurrentUser));
-    }
-
-    public static async Task<string> GetTokenAsync(CancellationToken cancellationToken)
-    {
-        if (File.Exists(CredentialPath))
-        {
-            try { return Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(CredentialPath), null, DataProtectionScope.CurrentUser)); }
-            catch (CryptographicException) { throw new InvalidOperationException("本机保存的授权无法解密，请重新填写令牌。"); }
-        }
-        // Reuse a local CLI login without storing or distributing its credential.
-        var start = new ProcessStartInfo("gh") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        foreach (var argument in new[] { "auth", "token", "--hostname", "github.com" }) start.ArgumentList.Add(argument);
-        try
-        {
-            using var process = Process.Start(start);
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(8));
-            try
-            {
-                var output = process.StandardOutput.ReadToEndAsync(timeout.Token);
-                var errors = process.StandardError.ReadToEndAsync(timeout.Token);
-                await process.WaitForExitAsync(timeout.Token);
-                await errors;
-                return process.ExitCode == 0 ? (await output).Trim() : null;
-            }
-            catch { if (!process.HasExited) process.Kill(); throw; }
-        }
-        catch (System.ComponentModel.Win32Exception) { return null; }
-    }
-
     public static HttpClient CreateClient(Settings settings)
     {
         var handler = new HttpClientHandler { AllowAutoRedirect = false };

@@ -4,7 +4,7 @@
  <GroupBox Header="软件更新" Template="{DynamicResource SettingsSectionTemplate}" Margin="0,0,0,12">
   <StackPanel>
    <TextBlock x:Name="VersionText" FontSize="14" FontWeight="SemiBold"/>
-   <TextBlock Text="更新源：satori-xyz/MoeLoaderR（私有仓库）" Foreground="#727889" Margin="0,6,0,8" TextWrapping="Wrap"/>
+   <TextBlock Text="更新源：satori-xyz/MoeLoaderR" Foreground="#727889" Margin="0,6,0,8" TextWrapping="Wrap"/>
    <WrapPanel>
     <Button x:Name="CheckButton" Content="检查更新" Padding="12,6" Margin="0,0,8,4"/>
     <Button x:Name="DownloadButton" Content="下载更新" Padding="12,6" Margin="0,0,8,4" Visibility="Collapsed"/>
@@ -13,16 +13,6 @@
    </WrapPanel>
    <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="100" Height="5" Margin="0,8,0,4" Foreground="#4F46D9" Visibility="Collapsed"/>
    <TextBlock x:Name="StatusText" Text="点击检查 GitHub 上的最新正式版本。" Foreground="#727889" TextWrapping="Wrap" Margin="0,6,0,0"/>
-   <Expander Header="GitHub 授权" Margin="0,12,0,0">
-    <StackPanel Margin="0,8,0,0">
-     <TextBlock Text="优先使用已保存的令牌，否则尝试本机 GitHub CLI 登录。私有仓库令牌需要此仓库的 Contents 读取权限。" Foreground="#727889" TextWrapping="Wrap"/>
-     <PasswordBox x:Name="TokenBox" Height="30" Margin="0,8,0,6" ToolTip="令牌只在本机加密保存"/>
-     <WrapPanel>
-      <Button x:Name="SaveTokenButton" Content="保存授权" Margin="0,0,8,0"/>
-      <Button x:Name="ClearTokenButton" Content="清除保存的授权"/>
-     </WrapPanel>
-    </StackPanel>
-   </Expander>
   </StackPanel>
  </GroupBox>
 </UserControl>
