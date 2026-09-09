@@ -115,6 +115,7 @@ public partial class MainWindow
     {
         var ischecked = DownloaderMenuCheckBox.IsChecked == true;
         LayoutRoot.GoElementState(ischecked ? nameof(ShowDownloadPanelState) : nameof(HideDownloadPanelState));
+        if (ischecked) MoeDownloaderControl.ScrollToBottom();
     }
 
     private void ImageSizeSliderOnMouseWheel(object sender, MouseWheelEventArgs e)

@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -20,6 +22,7 @@ public partial class MoeItemControl : IDisposable
 {
     private LoadingStateEnum _loadingState = LoadingStateEnum.Waiting;
     private bool _disposed;
+    private Popup _poolPopup;
 
     public enum LoadingStateEnum
     {
@@ -55,6 +58,8 @@ public partial class MoeItemControl : IDisposable
         MouseLeave += delegate { VisualStateManager.GoToState(this, nameof(NormalState), true); };
         DetailPageLinkButton.Click += delegate { MoeItem.DetailUrl.GoUrl(); };
         RefreshButton.Click += RefreshButtonOnClick;
+        PoolButton.Click += (_, _) => ShowPools();
+        Unloaded += (_, _) => ClosePools();
         ImageCheckBox.Click += ImageCheckBoxOnClick;
         StarButton.Click += StarButtonOnClick;
         MoeItem.PropertyChanged += MoeItemOnPropertyChanged;
@@ -62,6 +67,57 @@ public partial class MoeItemControl : IDisposable
         InitVisual();
     }
         
+    private void ClosePools()
+    {
+        if (_poolPopup == null) return;
+        _poolPopup.IsOpen = false;
+        _poolPopup.Child = null;
+        _poolPopup = null;
+    }
+
+    private void ShowPools()
+    {
+        if (_disposed || MoeItem.Pools.Length == 0) return;
+        if (_poolPopup?.IsOpen == true) { ClosePools(); return; }
+        ClosePools();
+        var content = new StackPanel();
+        var accent = new SolidColorBrush(Color.FromRgb(79, 70, 217));
+        foreach (var pool in MoeItem.Pools)
+        {
+            var group = new StackPanel { Margin = new Thickness(0, content.Children.Count == 0 ? 0 : 14, 0, 0) };
+            group.Children.Add(new TextBlock { Text = pool.Name, FontSize = 13, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Foreground = new SolidColorBrush(Color.FromRgb(48, 53, 70)) });
+            group.Children.Add(new TextBlock { Text = $"共 {pool.PostCount} 张 · 当前 #{pool.Sequence} · ID {pool.Id}", FontSize = 12, Foreground = Brushes.Gray, Margin = new Thickness(0, 5, 0, 8), TextWrapping = TextWrapping.Wrap });
+            var actions = new StackPanel { Orientation = Orientation.Horizontal };
+            var view = new Button { Content = "查看图集", Padding = new Thickness(10, 5, 10, 5), Foreground = accent };
+            view.Click += (_, _) => { pool.Url.GoUrl(); ClosePools(); };
+            var download = new Button { Content = "下载 ZIP", Padding = new Thickness(10, 5, 10, 5), Margin = new Thickness(8, 0, 0, 0), Foreground = accent };
+            download.Click += (_, _) =>
+            {
+                if (Application.Current.MainWindow is not MainWindow main) return;
+                var task = main.MoeDownloaderControl.Downloader.AddPoolDownload(MoeItem, pool, null);
+                main.DownloaderMenuCheckBox.IsChecked = true;
+                main.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(() => main.MoeDownloaderControl.DownloadItemsListBox.ScrollIntoView(task)));
+                download.Content = "已加入下载";
+            };
+            actions.Children.Add(view);
+            actions.Children.Add(download);
+            group.Children.Add(actions);
+            content.Children.Add(group);
+        }
+        _poolPopup = new Popup
+        {
+            PlacementTarget = PoolButton, Placement = PlacementMode.Right, HorizontalOffset = 6,
+            StaysOpen = false, AllowsTransparency = true,
+            Child = new Border
+            {
+                Width = 310, Padding = new Thickness(14), Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(225, 229, 238)), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8),
+                Child = new ScrollViewer { MaxHeight = 360, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = content }
+            }
+        };
+        _poolPopup.IsOpen = true;
+    }
+
     private void SiteOnPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MoeSite.IsUserLogin))
@@ -316,6 +372,7 @@ public partial class MoeItemControl : IDisposable
     {
         if (_disposed) return;
         _disposed = true;
+        ClosePools();
         MoeItem.PropertyChanged -= MoeItemOnPropertyChanged;
         MoeItem.Site.PropertyChanged -= SiteOnPropertyChanged;
         ImageLoadingStateChangedEvent = null;

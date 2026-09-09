@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.IO;
 
 namespace MoeLoaderR.Core;
 
@@ -43,6 +44,25 @@ public class MoeDownloader(Settings set)
         DownloadItems.Add(item);
     }
 
+    public MoeItem AddPoolDownload(MoeItem source, ImagePool pool, object thumbnail)
+    {
+        var existing = DownloadItems.FirstOrDefault(i => i.Site.HomeUrl == source.Site.HomeUrl && i.PoolArchive?.Id == pool.Id);
+        if (existing != null)
+        {
+            if (existing.DlStatus is DownloadStatus.WaitForDownload or DownloadStatus.Downloading) return existing;
+            if (File.Exists(existing.LocalFileFullPath)) return existing;
+            existing.CurrentDownloadTaskCts = new();
+            existing.Progress = 0;
+            existing.DlStatus = DownloadStatus.WaitForDownload;
+            existing.StatusText = "等待下载 Pool";
+            return existing;
+        }
+        var item = new MoeItem(source.Site, source.Para) { PoolArchive = pool, Id = pool.Id, StatusText = "等待下载 Pool" };
+        item.Urls.Add(DownloadTypeEnum.Origin, $"{source.Site.HomeUrl}/pool/zip/{pool.Id}", pool.Url);
+        AddDownload(item, thumbnail);
+        return item;
+    }
+
 
     public static void Stop(MoeItems items)
     {
@@ -82,6 +102,16 @@ public class MoeDownloader(Settings set)
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
+            if (item.PoolArchive != null)
+            {
+                if (item.DlStatus is DownloadStatus.Failed or DownloadStatus.Stop)
+                {
+                    item.CurrentDownloadTaskCts = new();
+                    item.DlStatus = DownloadStatus.WaitForDownload;
+                    item.StatusText = "等待下载 Pool";
+                }
+                continue;
+            }
             if (item.DlStatus == DownloadStatus.Downloading)
             {
                 item.CurrentDownloadTaskCts?.Cancel();

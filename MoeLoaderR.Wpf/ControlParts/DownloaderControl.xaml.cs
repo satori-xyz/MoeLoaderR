@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using MoeLoaderR.Core;
@@ -9,6 +11,7 @@ namespace MoeLoaderR.Wpf.ControlParts;
 
 public partial class DownloaderControl
 {
+    private bool _scrollToBottomPending;
     public Settings Settings { get; set; }
     public MoeDownloader Downloader { get; set; }
     public DispatcherTimer Timer { get; set; } = new();
@@ -23,6 +26,10 @@ public partial class DownloaderControl
         Downloader = new MoeDownloader(Settings);
 
         DownloadItemsListBox.ItemsSource = Downloader.DownloadItems;
+        Downloader.DownloadItems.CollectionChanged += (_, e) =>
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add) ScrollToBottom();
+        };
         DownloadItemsListBox.MouseRightButtonUp += DownloadItemsListBoxOnMouseRightButtonUp;
         OpenFolderButton.Click += OpenFolderButtonOnClick;
         DeleteAllButton.Click += DeleteAllButtonOnClick;
@@ -43,6 +50,20 @@ public partial class DownloaderControl
         Timer.Interval = TimeSpan.FromSeconds(1);
         Timer.Tick += TimerOnTick;
         Timer.Start();
+    }
+
+    public void ScrollToBottom()
+    {
+        // Batch additions share one scroll after binding and layout have settled.
+        if (_scrollToBottomPending) return;
+        _scrollToBottomPending = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() =>
+        {
+            _scrollToBottomPending = false;
+            DownloadItemsListBox.ApplyTemplate();
+            if (DownloadItemsListBox.Template.FindName("PART_ScrollViewer", DownloadItemsListBox) is ScrollViewer scroll)
+                scroll.ScrollToEnd();
+        }));
     }
 
     private void TimerOnTick(object sender, EventArgs e)

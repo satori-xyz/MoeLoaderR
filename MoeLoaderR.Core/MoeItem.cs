@@ -130,6 +130,9 @@ public class MoeItem : BindingObject
     public string Source { get; set; }
 
     public string Description { get; set; }
+    public ImagePool[] Pools { get; set; } = Array.Empty<ImagePool>();
+    public ImagePool PoolArchive { get; set; }
+    public string PoolsText => string.Join("\n", Pools.Select(pool => pool.DisplayText));
     public List<string> Tags { get; set; } = new();
     public bool IsNsfw { get; set; }
     public string DetailUrl { get; set; }
@@ -422,6 +425,7 @@ public class MoeItem : BindingObject
     public void InitDownload(dynamic bitimg, int subindex = 0, MoeItem fatheritem = null)
     {
         BitImg = bitimg;
+        if (PoolArchive != null) { LocalFileShortNameWithoutExt = $"Pool：{PoolArchive.Name}"; return; }
         if (ChildrenItems?.Count > 0)
         {
             LocalFileShortNameWithoutExt = "多张图片";
@@ -453,6 +457,11 @@ public class MoeItem : BindingObject
     /// <returns></returns>
     public async Task DownloadFileAsync(CancellationToken token)
     {
+        if (PoolArchive != null)
+        {
+            await PoolArchiveDownload.DownloadAsync(this, token);
+            return;
+        }
         if (ChildrenItems.Count > 0)
         {
             DlStatus = DownloadStatus.Downloading;

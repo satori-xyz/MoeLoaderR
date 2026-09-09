@@ -184,6 +184,15 @@
                 </Grid>
             </Grid>
         </CheckBox>
+        <Button x:Name="PoolButton" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,0,0,0" Width="36" Height="36" Template="{DynamicResource MoeImageOperateButtonControlTemplate}" Opacity="{Binding Opacity, ElementName=OperationBorder}" ToolTip="图集：查看或下载 Pool" AutomationProperties.Name="图集">
+            <TextBlock FontFamily="{DynamicResource SystemIconFont}" Foreground="White" FontSize="16" Text="&#xE8B9;"/>
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers><DataTrigger Binding="{Binding MoeItem.Pools.Length}" Value="0"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
         <Border x:Name="OperationBorder" VerticalAlignment="Center" HorizontalAlignment="Right" CornerRadius="6" Margin="3" Opacity="1">
             <StackPanel>
                 <Button x:Name="RefreshButton" Template="{DynamicResource MoeImageOperateButtonControlTemplate}" Width="36" Height="36" Margin="1" ToolTip="Refresh">

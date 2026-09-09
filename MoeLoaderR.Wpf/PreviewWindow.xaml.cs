@@ -20,7 +20,8 @@ public partial class PreviewWindow
     public MoeItem CurrentMoeItem { get; set; }
     public Settings Settings { get; set; }
     public BitmapImage PreviewBitmapImage { get; set; }
-    private double ImageScale => (double)PreviewBitmapImage.PixelWidth / PreviewBitmapImage.PixelHeight;
+    private Point _previousDragOffset;
+    private readonly System.Windows.Threading.DispatcherTimer _qualityTimer = new() { Interval = TimeSpan.FromMilliseconds(160) };
     public CancellationTokenSource Cts { get; set; }
         
     public PreviewWindow()
@@ -28,8 +29,15 @@ public partial class PreviewWindow
         InitializeComponent();
         MouseWheel += OnMouseWheel;
         LargeImageThumb.DragDelta += LargeImageThumbOnDragDelta;
+        LargeImageThumb.DragStarted += (_, _) => _previousDragOffset = new Point();
         LargeImage.ClearValue(MarginProperty);
-        MouseLeftButtonDown += delegate { DragMove(); };
+        ImageCanvas.SizeChanged += (_, _) => CenterImage();
+        _qualityTimer.Tick += (_, _) =>
+        {
+            _qualityTimer.Stop();
+            RenderOptions.SetBitmapScalingMode(LargeImage, BitmapScalingMode.HighQuality);
+        };
+        Closed += (_, _) => { _qualityTimer.Stop(); Cts?.Cancel(); };
         KeyDown += OnKeyDown;
     }
 
@@ -79,19 +87,49 @@ public partial class PreviewWindow
     {
         var i = CurrentMoeItem;
         InfoTitleTextBlock.Text = i.Title;
+        InfoTitleTextBlock.Visibility = string.IsNullOrWhiteSpace(i.Title) ? Visibility.Collapsed : Visibility.Visible;
         InfoIdTextBlock.Text = $"{i.Id}";
         InfoUploaderTextBlock.Text = i.Uploader;
         InfoScoreTextBlock.Text = $"{i.Score}";
         InfoResolutionTextBlock.Text = $"{i.Width}x{i.Height}";
         InfoDateTextBlock.Text = i.DateString;
+        PoolsWrapPanel.Children.Clear();
+        foreach (var pool in i.Pools)
+        {
+            var poolGroup = new StackPanel { Orientation = Orientation.Horizontal };
+            var button = new Button
+            {
+                Content = pool.DisplayText, ToolTip = pool.Url,
+                Margin = new Thickness(12, 2, 0, 2), Padding = new Thickness(8, 4, 8, 4),
+                Foreground = new SolidColorBrush(Color.FromRgb(79, 70, 217))
+            };
+            button.Click += (_, _) => pool.Url.GoUrl();
+            poolGroup.Children.Add(button);
+            var downloadButton = new Button
+            {
+                Content = "下载 Pool", ToolTip = "下载整个图集 ZIP，保留原始文件名；需登录 Yande",
+                Margin = new Thickness(4, 2, 0, 2), Padding = new Thickness(8, 4, 8, 4),
+                Foreground = new SolidColorBrush(Color.FromRgb(79, 70, 217))
+            };
+            downloadButton.Click += (_, _) =>
+            {
+                if (Application.Current.MainWindow is not MainWindow main) return;
+                main.MoeDownloaderControl.Downloader.AddPoolDownload(i, pool, null);
+                main.DownloaderMenuCheckBox.IsChecked = true;
+                main.MoeDownloaderControl.ScrollToBottom();
+                downloadButton.Content = "已加入下载";
+            };
+            poolGroup.Children.Add(downloadButton);
+            PoolsWrapPanel.Children.Add(poolGroup);
+        }
         TagsWrapPanel.Children.Clear();
         foreach (var iTag in i.Tags)
         {
             var tagTb = new TextBlock();
             tagTb.Text = iTag;
-            tagTb.FontSize = 14;
+            tagTb.FontSize = 12;
             tagTb.Foreground = (SolidColorBrush)FindResource("HightLightFontColorBrush");
-            tagTb.Margin = new Thickness(0,0,8,8);
+            tagTb.Margin = new Thickness(0,3,12,3);
             TagsWrapPanel.Children.Add(tagTb);
         }
 
@@ -99,99 +137,73 @@ public partial class PreviewWindow
 
     private void LargeImageThumbOnDragDelta(object sender, DragDeltaEventArgs e)
     {
-        var thumb = (Thumb)sender;
-        var nTop = Canvas.GetTop(thumb) + e.VerticalChange;
-        var nLeft = Canvas.GetLeft(thumb) + e.HorizontalChange;
+        if (PreviewBitmapImage == null) return;
+        BeginImageInteraction();
+        // The stationary Thumb reports displacement from the start, not the last event.
+        var offset = new Point(e.HorizontalChange, e.VerticalChange);
+        var delta = offset - _previousDragOffset;
+        _previousDragOffset = offset;
+        SetImageOffset(ImageTranslateTransform.X + delta.X, ImageTranslateTransform.Y + delta.Y);
+        e.Handled = true;
+    }
 
-        // 防止Thumb控件被拖出容器。  
-        if (LargeImage.Height <= ImageCanvas.ActualHeight)
-        {
-            if (nTop <= 0) nTop = 0;
-            if (nTop >= ImageCanvas.ActualHeight - thumb.Height) nTop = ImageCanvas.ActualHeight - thumb.Height;
-        }
+    private void BeginImageInteraction()
+    {
+        RenderOptions.SetBitmapScalingMode(LargeImage, BitmapScalingMode.LowQuality);
+        _qualityTimer.Stop();
+        _qualityTimer.Start();
+    }
 
-        if (LargeImage.Width <= ImageCanvas.ActualWidth)
-        {
-            if (nLeft <= 0) nLeft = 0;
-            if (nLeft >= ImageCanvas.ActualWidth - thumb.Width) nLeft = ImageCanvas.ActualWidth - thumb.Width;
-        }
-
-        Canvas.SetTop(thumb, nTop);
-        Canvas.SetLeft(thumb, nLeft);
+    private void SetImageOffset(double x, double y)
+    {
+        var width = LargeImage.Width * ImageScaleTransform.ScaleX;
+        var height = LargeImage.Height * ImageScaleTransform.ScaleY;
+        ImageTranslateTransform.X = Math.Clamp(x, Math.Min(0, ImageCanvas.ActualWidth - width), Math.Max(0, ImageCanvas.ActualWidth - width));
+        ImageTranslateTransform.Y = Math.Clamp(y, Math.Min(0, ImageCanvas.ActualHeight - height), Math.Max(0, ImageCanvas.ActualHeight - height));
     }
 
     private void OnMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if(!LargeImageThumb.IsMouseOver) return;
-            
-        var delta = e.Delta / 500d;
-        var mousePosToImage = e.GetPosition(LargeImage);
+        if (!LargeImageThumb.IsMouseOver || PreviewBitmapImage == null) return;
+        ZoomImage(e.GetPosition(ImageCanvas), e.Delta);
+        e.Handled = true;
+    }
 
-        if (delta > 0 && LargeImage.Width > 2 * ImageCanvas.ActualWidth) return;
-        if (delta < 0 && LargeImage.Width < ImageCanvas.ActualWidth / 4) return;
-
-        LargeImage.Width *= 1d + delta;
-        LargeImage.Height = LargeImage.Width / ImageScale;
-
-        var movex = mousePosToImage.X;
-        var movey = mousePosToImage.Y;
-
-        // 判断鼠标在元素外
-        if (movex > LargeImage.ActualWidth || movex < 0) movex = LargeImage.Width / 2;
-        if (movey > LargeImage.ActualHeight || movey < 0) movey = LargeImage.Height / 2;
-
-        //  图片不大于窗格时保证在窗格内  
-        var nTop = Canvas.GetTop(LargeImageThumb) - delta * movey;
-        var nLeft = Canvas.GetLeft(LargeImageThumb) - delta * movex;
-        if (LargeImage.Height <= ImageCanvas.ActualHeight)
-        {
-            if (nTop <= 0) nTop = 0;
-            if (nTop >= ImageCanvas.ActualHeight - LargeImage.Height) nTop = ImageCanvas.ActualHeight - LargeImage.Height;
-        }
-
-        if (LargeImage.Width <= ImageCanvas.ActualWidth)
-        {
-            if (nLeft <= 0) nLeft = 0;
-            if (nLeft >= ImageCanvas.ActualWidth - LargeImage.Width) nLeft = ImageCanvas.ActualWidth - LargeImage.Width;
-        }
-
-        Canvas.SetLeft(LargeImageThumb, nLeft);
-        Canvas.SetTop(LargeImageThumb, nTop);
+    internal void ZoomImage(Point anchor, int delta)
+    {
+        if (PreviewBitmapImage == null || ImageCanvas.ActualWidth <= 0 || ImageCanvas.ActualHeight <= 0) return;
+        var previous = ImageScaleTransform.ScaleX;
+        var fit = Math.Min(1, Math.Min(ImageCanvas.ActualWidth / LargeImage.Width, ImageCanvas.ActualHeight / LargeImage.Height));
+        var scale = Math.Clamp(previous * Math.Pow(1.12, delta / 120d), fit / 4, Math.Max(8, fit));
+        var ratio = scale / previous;
+        var x = anchor.X - (anchor.X - ImageTranslateTransform.X) * ratio;
+        var y = anchor.Y - (anchor.Y - ImageTranslateTransform.Y) * ratio;
+        BeginImageInteraction();
+        ImageScaleTransform.ScaleX = ImageScaleTransform.ScaleY = scale;
+        SetImageOffset(x, y);
     }
 
     public void InitImagePosition()
     {
-        if (PreviewBitmapImage == null) return;
-        // 设置原始宽高
+        if (PreviewBitmapImage == null || ImageCanvas.ActualWidth <= 0 || ImageCanvas.ActualHeight <= 0) return;
         LargeImage.Width = PreviewBitmapImage.PixelWidth;
         LargeImage.Height = PreviewBitmapImage.PixelHeight;
-        // 调整大小适合窗口
-        if (LargeImage.Width > ImageCanvas.ActualWidth)
-        {
-            LargeImage.Width = ImageCanvas.ActualWidth;
-            LargeImage.Height = LargeImage.Width / ImageScale;
-        }
-        if (LargeImage.Height > ImageCanvas.ActualHeight)
-        {
-            LargeImage.Height = ImageCanvas.ActualHeight;
-            LargeImage.Width = LargeImage.Height * ImageScale;
-        }
-        // 位置居中
-        Canvas.SetLeft(LargeImageThumb, ImageCanvas.ActualWidth / 2 - LargeImage.Width / 2);
-        Canvas.SetTop(LargeImageThumb, ImageCanvas.ActualHeight / 2 - LargeImage.Height / 2);
+        var scale = Math.Min(1, Math.Min(ImageCanvas.ActualWidth / LargeImage.Width, ImageCanvas.ActualHeight / LargeImage.Height));
+        ImageScaleTransform.ScaleX = ImageScaleTransform.ScaleY = scale;
+        CenterImage();
+    }
+
+    private void CenterImage()
+    {
+        if (PreviewBitmapImage == null || !double.IsFinite(LargeImage.Width) || !double.IsFinite(LargeImage.Height)) return;
+        ImageTranslateTransform.X = (ImageCanvas.ActualWidth - LargeImage.Width * ImageScaleTransform.ScaleX) / 2;
+        ImageTranslateTransform.Y = (ImageCanvas.ActualHeight - LargeImage.Height * ImageScaleTransform.ScaleY) / 2;
     }
 
     public void SetImage(BitmapImage img)
     {
-        var sb = LargeImage.FadeHideSb();
-        sb.Completed += delegate
-        {
-            LargeImage.Source = img;
-            LargeImage.EnlargeShowSb().Begin();
-        };
-        sb.Begin();
+        LargeImage.Source = img;
     }
-        
     /// <summary>
     /// 异步加载图片
     /// </summary>

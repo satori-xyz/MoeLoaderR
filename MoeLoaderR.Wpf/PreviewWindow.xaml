@@ -23,9 +23,9 @@
         <ItemsPanelTemplate x:Key="PagingItemsPanelTemplate">
             <VirtualizingStackPanel IsItemsHost="True" Orientation="Horizontal"/>
         </ItemsPanelTemplate>
-        <SolidColorBrush x:Key="HightLightFontColorBrush" Color="#FF0094F5"/>
+        <SolidColorBrush x:Key="HightLightFontColorBrush" Color="#4F46D9"/>
     </Window.Resources>
-    <Grid x:Name="RootGrid">
+    <Grid x:Name="RootGrid" Background="#F7F8FA">
         <Grid.RowDefinitions>
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
@@ -49,8 +49,8 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Canvas x:Name="ImageCanvas">
-            <Image x:Name="LargeImage" Canvas.Left="{Binding (Canvas.Left), ElementName=LargeImageThumb}" Canvas.Top="{Binding (Canvas.Top), ElementName=LargeImageThumb}">
+        <Canvas x:Name="ImageCanvas" ClipToBounds="True">
+            <Image x:Name="LargeImage" IsHitTestVisible="False" RenderOptions.BitmapScalingMode="HighQuality">
                 <Image.RenderTransform>
                     <TransformGroup>
                         <ScaleTransform x:Name="ImageScaleTransform"/>
@@ -58,7 +58,7 @@
                     </TransformGroup>
                 </Image.RenderTransform>
             </Image>
-            <Thumb x:Name="LargeImageThumb" Height="{Binding ActualHeight, ElementName=LargeImage}" Width="{Binding ActualWidth, ElementName=LargeImage}" Background="{x:Null}" Canvas.Left="0" Canvas.Top="0">
+            <Thumb x:Name="LargeImageThumb" Height="{Binding ActualHeight, ElementName=ImageCanvas}" Width="{Binding ActualWidth, ElementName=ImageCanvas}" Background="{x:Null}" Canvas.Left="0" Canvas.Top="0">
                 <Thumb.Template>
                     <ControlTemplate>
                         <Border Background="#00E000FF"/>
@@ -68,65 +68,39 @@
 
         </Canvas>
         <ProgressBar x:Name="ImageLoadProgressBar" Width="156" Height="16" Template="{DynamicResource MoeProgressBarControlTemplate}"/>
-        <Grid x:Name="ImageInfoGrid">
-            <Grid VerticalAlignment="Top" Height="56">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="56"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Border BorderBrush="#FFB5B5B5" BorderThickness="1" Width="48" Height="48" Grid.RowSpan="2" CornerRadius="50">
-                    <Border.Background>
-                        <ImageBrush Stretch="UniformToFill" ImageSource="/MoeLoaderR;component/Assets/moeloaderr.ico"/>
-                    </Border.Background>
-                </Border>
-                <Border BorderThickness="1" Width="48" Height="48" Grid.RowSpan="2" CornerRadius="50" Margin="2"/>
-                <TextBlock x:Name="InfoTitleTextBlock" TextWrapping="Wrap" Text="Title" Grid.Column="1" VerticalAlignment="Center" FontSize="16" Foreground="{DynamicResource HightLightFontColorBrush}" Margin="12,0" HorizontalAlignment="Left" Background="#7FFFFFFF"/>
-                <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="12,0" Orientation="Horizontal" HorizontalAlignment="Left">
-                    <StackPanel.Effect>
-                        <DropShadowEffect ShadowDepth="0" BlurRadius="8"/>
-                    </StackPanel.Effect>
-                    <TextBlock TextWrapping="Wrap" Text="作者：" VerticalAlignment="Center" FontSize="14"/>
-                    <TextBlock x:Name="InfoUploaderTextBlock" TextWrapping="Wrap" Text="Title" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource HightLightFontColorBrush}"/>
-                    <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" FontSize="14" Margin="16,0,0,0"><Run Text="作品"/><Run Text="ID"/><Run Text="："/></TextBlock>
-                    <TextBlock x:Name="InfoIdTextBlock" TextWrapping="Wrap" Text="ID" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource HightLightFontColorBrush}"/>
-                    <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" FontSize="14" Margin="16,0,0,0"><Run Text="评分"/><Run Text="："/></TextBlock>
-                    <TextBlock x:Name="InfoScoreTextBlock" TextWrapping="Wrap" Text="Score" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource HightLightFontColorBrush}"/>
-                    <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" FontSize="14" Margin="16,0,0,0"><Run Text="分辨率"/><Run Text="："/></TextBlock>
-                    <TextBlock x:Name="InfoResolutionTextBlock" TextWrapping="Wrap" Text="Res" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource HightLightFontColorBrush}"/>
-                    <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" FontSize="14" Margin="16,0,0,0"><Run Text="日期"/><Run Text="："/></TextBlock>
-                    <TextBlock x:Name="InfoDateTextBlock" TextWrapping="Wrap" Text="date" VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource HightLightFontColorBrush}"/>
+        <Grid x:Name="ImageInfoGrid" TextBlock.Foreground="#303546">
+            <Border VerticalAlignment="Top" Background="White" BorderBrush="#E1E5EE" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="12">
+                <StackPanel>
+                    <TextBlock x:Name="InfoTitleTextBlock" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <WrapPanel x:Name="InfoWrapPanel">
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3"><TextBlock Text="作者：" Foreground="#727889"/><TextBlock x:Name="InfoUploaderTextBlock"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3"><TextBlock Text="作品 ID：" Foreground="#727889"/><TextBlock x:Name="InfoIdTextBlock"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3"><TextBlock Text="评分：" Foreground="#727889"/><TextBlock x:Name="InfoScoreTextBlock"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,16,3"><TextBlock Text="分辨率：" Foreground="#727889"/><TextBlock x:Name="InfoResolutionTextBlock"/></StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,3"><TextBlock Text="日期：" Foreground="#727889"/><TextBlock x:Name="InfoDateTextBlock"/></StackPanel>
+                        <WrapPanel x:Name="PoolsWrapPanel" VerticalAlignment="Center" MaxWidth="{Binding ActualWidth, ElementName=InfoWrapPanel}"/>
+                    </WrapPanel>
                 </StackPanel>
-            </Grid>
-            <Grid VerticalAlignment="Bottom">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <TextBlock TextWrapping="Wrap" FontSize="14" Margin="8" VerticalAlignment="Top" Text="Tags：" Background="#7FFFFFFF"/>
-                <WrapPanel x:Name="TagsWrapPanel" Grid.Column="1" VerticalAlignment="Top" Margin="0,8,8,8" Background="#7FFFFFFF" HorizontalAlignment="Left"/>
-            </Grid>
+            </Border>
+            <Border VerticalAlignment="Bottom" Background="White" BorderBrush="#E1E5EE" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="12">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <TextBlock Text="标签" Foreground="#727889" Margin="0,3,12,0"/>
+                    <ScrollViewer Grid.Column="1" MaxHeight="110" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <WrapPanel x:Name="TagsWrapPanel"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
         <Grid x:Name="MultiPagingGrid" Grid.Row="1" Height="0">
             <ListBox x:Name="PagingListBox" Template="{DynamicResource PreviewPagingListBoxControlTemplate}" ItemsPanel="{DynamicResource PagingItemsPanelTemplate}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="72" Height="72" Margin="4">
-                            <Border x:Name="ImageBorder" BorderBrush="#FF9C9C9C" BorderThickness="1" CornerRadius="12">
-                                <Border.Background>
-                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                                        <GradientStop Color="White" Offset="0.995"/>
-                                        <GradientStop Color="#FFDEDEDE"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                            <Border x:Name="ImageBorder" Background="White" BorderBrush="#E1E5EE" BorderThickness="1" CornerRadius="6">
+
                             </Border>
                             <TextBlock x:Name="IndexTextBlock" TextWrapping="Wrap" Text="12" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold">
-                                <TextBlock.Effect>
-                                    <DropShadowEffect Color="White" ShadowDepth="0"/>
-                                </TextBlock.Effect>
                             </TextBlock>
                         </Grid>
                     </DataTemplate>
