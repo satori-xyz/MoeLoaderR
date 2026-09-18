@@ -77,6 +77,13 @@ public sealed class VirtualThumbnailPanel : Panel
         _viewer = viewer;
         _viewer.ScrollChanged += OnScrollChanged;
     }
+
+    public void ScrollToImage(int id)
+    {
+        UpdateLayout();
+        var index = _entries.FindIndex(entry => entry.MoeItem.Id == id);
+        if (index >= 0) _viewer?.ScrollToVerticalOffset(index / _columns * _cellHeight);
+    }
     private void OnScrollChanged(object sender, ScrollChangedEventArgs e) => InvalidateMeasure();
 
     public void SetItems(IEnumerable<MoeItem> items)

@@ -249,8 +249,10 @@ public partial class SearchControl
         Ex.Log(Settings.CurrentSession.GetCurrentSearchStateText());
         wm.MoeExplorer.DownloadTypeComboBox.ItemsSource = Settings.CurrentSession.ResultDownloadTypes;
         wm.MoeExplorer.DownloadTypeComboBox.SelectedIndex = 0;
-        var vp = await Settings.CurrentSession.SearchNextVisualPage();
-        if (vp is not null) _ = wm.MoeExplorer.ShowVisualPage(vp);
+        var session = Settings.CurrentSession;
+        var vp = await session.SearchNextVisualPage();
+        if (Settings.CurrentSession != session) return;
+        if (vp is not null) await wm.MoeExplorer.ShowVisualPage(vp);
         SetSearchVisual(false);
             
     }

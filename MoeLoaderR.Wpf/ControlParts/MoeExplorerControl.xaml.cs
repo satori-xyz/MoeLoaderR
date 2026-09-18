@@ -346,18 +346,22 @@ public partial class MoeExplorerControl
 
     private async void NextPageButtonOnClick(object sender, RoutedEventArgs e)
     {
-        if (Settings.CurrentSession.VisualPages.LastOrDefault()?.IsSearchComplete == true)
+        var session = Settings.CurrentSession;
+        if (session == null || session.IsSearching || !NextButtonControl.IsEnabled) return;
+        NextButtonControl.IsEnabled = false;
+        try
         {
-            return;
+            var vp = await session.SearchNextVisualPage();
+            if (vp == null || Settings.CurrentSession != session) return;
+            if (PagingStackPanel.Children.Count > 0)
+            {
+                var offset = PagingStackPanel.Children[^1].TranslatePoint(new Point(0, 0), PagingStackPanel).X;
+                PagingScrollViewer.ScrollToHorizontalOffset(offset);
+            }
+            await ShowVisualPage(vp);
         }
-        foreach (PagingButtonControl control in PagingStackPanel.Children)
-        {
-            control.VisualPage.IsCurrentPage = false;
-        }
-        var vp = await Settings.CurrentSession.SearchNextVisualPage();
-        var offset = PagingStackPanel.Children[^1].TranslatePoint(new Point(0, 0), PagingStackPanel).X;
-        PagingScrollViewer.ScrollToHorizontalOffset(offset);
-        _ = ShowVisualPage(vp);
+        catch (Exception ex) { Ex.Log(ex); Ex.ShowMessage("翻页失败，请重试"); }
+        finally { NextButtonControl.IsEnabled = true; }
     }
 
     public void AddPageButton(SearchedVisualPage page)

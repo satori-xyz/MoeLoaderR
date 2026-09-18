@@ -241,6 +241,7 @@ public class Settings : BindingObject
     ///     每一个站点分别的设置（所有站点集合）
     /// </summary>
     public MoeSitesSettings AllSitesSettings { get; set; } = new();
+    public Dictionary<string, BrowsePosition> BrowsePositions { get; set; } = new();
 
 
     private bool _isCustomSiteMode;

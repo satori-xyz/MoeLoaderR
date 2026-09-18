@@ -78,74 +78,66 @@ public class SearchSession : BindingObject
     }
 
 
+    private int _loadingVisualPage;
+
     public async Task<SearchedVisualPage> SearchNextVisualPage()
     {
-        var lastVp = VisualPages.LastOrDefault();
-        if (lastVp?.IsSearchComplete == true) return null;
-
-        var vp = new SearchedVisualPage();
-        if (VisualPages.Count == 0)
+        if (Interlocked.CompareExchange(ref _loadingVisualPage, 1, 0) != 0) return null;
+        SearchedVisualPage vp = null;
+        try
         {
-            vp.FirstRealPageIndex = FirstSearchPara.PageIndex ?? 1;
-        }
-        else
-        {
-            var lastpage = VisualPages[^1].RealPages[^1];
-            if (lastpage.CurrentPageNum != null)
-                vp.FirstRealPageIndex = (int) lastpage.CurrentPageNum + 1;
-            else
-                vp.FirstRealPageIndex = (VisualPages[^1].RealPages[^1].CurrentPageNumFromOne ?? 0) + 1;
-        }
-
-        VisualPages.Add(vp);
-
-        //var vp = VisualPages[^1];
-        vp.LoadStart();
-
-
-        while (true)
-        {
-            if (vp.RealPages.LastOrDefault()?.HasNextPage == false) break;
+            var last = VisualPages.LastOrDefault();
+            if (last?.IsSearchComplete == true) return null;
+            var lastReal = last?.RealPages.LastOrDefault();
+            var retry = last != null && (lastReal == null || lastReal.SearchException != null);
             SearchPara para;
-            if (VisualPages.Count == 1)
+            if (retry)
             {
-                var nextpara = VisualPages[0].RealPages.LastOrDefault()?.NextPagePara;
-                para = nextpara ?? FirstSearchPara;
+                vp = last;
+                para = lastReal?.Para;
+                if (lastReal != null) vp.RealPages.Remove(lastReal);
+                para ??= VisualPages.SelectMany(page => page.RealPages).LastOrDefault()?.NextPagePara;
+                if (para == null)
+                {
+                    para = FirstSearchPara.Clone();
+                    para.PageIndex = vp.FirstRealPageIndex > 0 ? vp.FirstRealPageIndex : FirstSearchPara.PageIndex;
+                }
             }
             else
             {
-                var nextpara = VisualPages[^1].RealPages.LastOrDefault()?.NextPagePara;
-                para = nextpara ?? VisualPages[^2].RealPages[^1].NextPagePara;
+                para = lastReal?.NextPagePara ?? FirstSearchPara.Clone();
+                vp = new SearchedVisualPage { FirstRealPageIndex = para.PageIndex ?? (lastReal?.CurrentPageNumFromOne ?? 0) + 1 };
+                VisualPages.Add(vp);
             }
-
-            var rp = await TryGetRealPage(para);
-            vp.RealPages.Add(rp);
-
-            var ex = rp.SearchException;
-            if (ex != null)
+            vp.LoadStart();
+            while (true)
             {
-                Ex.ShowMessage($"搜索中断:{ex.Message}", rp.SearchException.StackTrace);
-                break;
+                var rp = await TryGetRealPage(para);
+                vp.RealPages.Add(rp);
+                if (rp.SearchException != null)
+                {
+                    Ex.ShowMessage($"搜索中断:{rp.SearchException.Message}，可点击下一页重试", rp.SearchException.StackTrace);
+                    break;
+                }
+                if (rp.HasNextPage == false)
+                {
+                    vp.IsSearchComplete = true;
+                    break;
+                }
+                if (vp.RealPages.Sum(page => page.Count - page.FilterCount) >= para.CountLimit) break;
+                para = rp.NextPagePara;
             }
-
-            
-            if (rp.HasNextPage == false)
-            {
-                vp.IsSearchComplete = true;
-                break;
-            }
-
-            var displayCount = vp.RealPages.Sum(realPage => realPage.Count - realPage.FilterCount);
-            if (displayCount >= para.CountLimit) break;
+            return vp;
         }
-
-        vp.GetEnd();
-        return vp;
+        finally
+        {
+            try { vp?.GetEnd(); }
+            finally { Interlocked.Exchange(ref _loadingVisualPage, 0); }
+        }
     }
-
     public async Task<SearchedPage> TryGetRealPage(SearchPara para)
     {
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         SearchingTasksCtsList.Add(cts);
         SearchedPage rp;
 
@@ -161,19 +153,20 @@ public class SearchSession : BindingObject
         }
         catch (Exception e)
         {
-            if (Debugger.IsAttached) throw;
+
             rp = new SearchedPage();
             rp.SearchException = e;
             rp.HasNextPage = false;
         }
 
+        finally { SearchingTasksCtsList.Remove(cts); }
+
         rp.Para = para;
-        SearchingTasksCtsList.Remove(cts);
         if (rp.Count == 0) rp.HasNextPage = false;
 
         if (rp.HasNextPage != false) rp.GenNextPagePara();
 
-        RealPageCount++;
+        if (rp.SearchException == null) RealPageCount++;
         // page info
         rp.CurrentPageNumFromOne ??= RealPageCount;
         //if(para.Config.IsSupportSearchByImageLastId)
@@ -193,7 +186,7 @@ public class SearchSession : BindingObject
     public int RealPageImageCount { get; set; }
     public async Task StopSearch()
     {
-        foreach (var cts in SearchingTasksCtsList) await cts.CancelAsync();
+        foreach (var cts in SearchingTasksCtsList.ToArray()) await cts.CancelAsync();
 
         while (true)
         {

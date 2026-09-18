@@ -55,6 +55,7 @@ public partial class MainWindow
         MoeDownloaderControl.Init(Settings);
         SettingsMenuCheckBox.Checked += OpenSettings;
         MoeExplorer.Init(Settings);
+        InitBrowsePositions();
 
         // helper : collect ,log
         new LogWindowHelper().Init(LogButton, Settings);
