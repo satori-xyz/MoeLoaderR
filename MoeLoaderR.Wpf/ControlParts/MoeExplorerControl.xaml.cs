@@ -172,7 +172,24 @@ public partial class MoeExplorerControl
 
     private void OnMoeItemPreviewButtonClicked(MoeItem item, ImageSource imgSource)
     {
-        PreviewWindow.Show(PreviewWindowInstance, Application.Current.MainWindow, item, imgSource);
+        var preview = PreviewWindowInstance;
+        if (preview == null)
+        {
+            var owner = Application.Current.MainWindow;
+            preview = new PreviewWindow { Owner = owner, Width = owner.Width * 0.85, Height = owner.Height * 0.85 };
+            PreviewWindowInstance = preview;
+            preview.Closed += (_, _) =>
+            {
+                if (ReferenceEquals(PreviewWindowInstance, preview)) PreviewWindowInstance = null;
+            };
+            preview.Show();
+        }
+        else
+        {
+            if (preview.WindowState == WindowState.Minimized) preview.WindowState = WindowState.Normal;
+            preview.Activate();
+        }
+        _ = preview.InitAsync(item, imgSource);
     }
     
         

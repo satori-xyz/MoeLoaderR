@@ -1,0 +1,102 @@
+<Window x:Class="MoeLoaderR.Wpf.ImageCheckWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="图片检查 · MoeLoaderR" Width="960" Height="640" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" Background="#F7F8FA"
+        Foreground="#303546" FontFamily="Microsoft YaHei" FontSize="13">
+    <Window.Resources>
+        <Style x:Key="ModeOption" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#626B80"/><Setter Property="Padding" Value="16,8"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+                <Border x:Name="Surface" CornerRadius="6" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Surface" Property="Background" Value="#E6E7FC"/><Setter Property="Foreground" Value="#4F46D9"/></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#50576B"/>
+            <Setter Property="BorderBrush" Value="#DFE3EC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="Opacity" Value="0.8"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Frame" Property="Opacity" Value="0.4"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate></Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Background="#F7F8FA">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Border Background="White" BorderBrush="#E1E5EE" BorderThickness="0,0,0,1" Padding="24,20">
+            <StackPanel>
+                <TextBlock Text="图片检查" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="检查图片完整性，或查找内容完全相同的重复图片" Foreground="#7A8090" Margin="0,6,0,0"/>
+            </StackPanel>
+        </Border>
+        <StackPanel Grid.Row="1" Margin="24,18,24,12">
+            <StackPanel x:Name="ModeChoices" Orientation="Horizontal" Margin="0,0,0,12">
+                <RadioButton x:Name="IntegrityMode" Content="完整性检查" GroupName="CheckMode" Style="{StaticResource ModeOption}" IsChecked="True" Checked="ModeChanged"/>
+                <RadioButton x:Name="DuplicateMode" Content="重复文件" GroupName="CheckMode" Style="{StaticResource ModeOption}" Margin="6,0,0,0" Checked="ModeChanged"/>
+            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="FolderText" Height="36" VerticalContentAlignment="Center" Padding="10,4" Background="White" BorderBrush="#DFE3EC" ToolTip="支持本地目录和网络共享路径"/>
+                <Button x:Name="BrowseButton" Grid.Column="1" Content="选择文件夹" Style="{StaticResource ActionButton}" Margin="10,0,0,0" Click="BrowseFolder"/>
+            </Grid>
+            <DockPanel Margin="0,12,0,0">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button x:Name="StartButton" Content="开始检查" Style="{StaticResource ActionButton}" Background="#4F46D9" Foreground="White" BorderBrush="#4F46D9" Click="StartScan"/>
+                    <Button x:Name="CancelButton" Content="停止" Style="{StaticResource ActionButton}" Margin="8,0,0,0" IsEnabled="False" Click="CancelScan"/>
+                </StackPanel>
+                <CheckBox x:Name="RecursiveCheckBox" Content="包含子文件夹" IsChecked="True" Foreground="#50576B" VerticalAlignment="Center"/>
+            </DockPanel>
+            <TextBlock x:Name="StatusText" Text="选择文件夹后开始检查，结果仅列出疑似异常和无法读取的文件。" Margin="0,12,0,0" TextWrapping="Wrap"/>
+            <TextBlock x:Name="CurrentPathText" Foreground="#7A8090" FontSize="11" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+            <ProgressBar x:Name="ScanProgress" Height="3" Margin="0,10,0,0" Foreground="#4F46D9" Visibility="Collapsed"/>
+        </StackPanel>
+        <Border Grid.Row="2" Margin="24,0,24,14" Background="White" BorderBrush="#E1E5EE" BorderThickness="1" CornerRadius="8" Padding="1">
+            <DataGrid x:Name="ResultsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+                      SelectionMode="Extended" SelectionUnit="FullRow" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#F0F1F5"
+                      BorderThickness="0" Background="White" RowBackground="White" AlternatingRowBackground="#FAFAFD" RowHeight="36"
+                      EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                      SelectionChanged="SelectionChanged" MouseDoubleClick="OpenSelectedLocation">
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader"><Setter Property="Background" Value="#F1F3F8"/><Setter Property="Padding" Value="10,10"/><Setter Property="Foreground" Value="#626B80"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+                    <Style TargetType="DataGridCell"><Setter Property="Padding" Value="8,5"/><Setter Property="BorderThickness" Value="0"/></Style>
+                    <Style TargetType="DataGridRow"><Setter Property="ToolTip" Value="{Binding Path}"/></Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn x:Name="GroupColumn" Header="组别" Binding="{Binding GroupText}" Width="76" Visibility="Collapsed"/>
+                    <DataGridTextColumn Header="文件名" Binding="{Binding Name}" Width="2*" MinWidth="180"/>
+                    <DataGridTextColumn Header="大小" Binding="{Binding SizeText}" Width="100"/>
+                    <DataGridTextColumn Header="结果" Binding="{Binding Kind}" Width="110"/>
+                    <DataGridTextColumn x:Name="DetailColumn" Header="说明" Binding="{Binding Detail}" Width="3*" MinWidth="240"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+        <Border Grid.Row="3" Background="White" BorderBrush="#E1E5EE" BorderThickness="0,1,0,0" Padding="24,14">
+            <StackPanel>
+                <TextBlock x:Name="FooterHint" Text="只检查文件结构和结束标记，不解码整张图片。通过检查不代表文件绝对完整。" Foreground="#7A8090" FontSize="12" TextWrapping="Wrap"/>
+                <WrapPanel Margin="0,12,0,0">
+                        <Button x:Name="SelectAllButton" Content="全选" Style="{StaticResource ActionButton}" Margin="0,0,8,0" IsEnabled="False" Click="SelectAllResults"/>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <Button x:Name="OpenLocationButton" Content="打开文件位置" Style="{StaticResource ActionButton}" IsEnabled="False" Click="OpenSelectedLocation"/>
+                        <Button x:Name="ExportButton" Content="导出清单" Style="{StaticResource ActionButton}" Margin="8,0,0,0" IsEnabled="False" Click="ExportResults"/>
+                        <Button x:Name="RepairButton" Content="删除并重新下载" ToolTip="处理选中的异常图片；支持 Ctrl / Shift 多选和 Ctrl+A 全选" Style="{StaticResource ActionButton}" Margin="8,0,0,0" IsEnabled="False" Click="RepairSelected"/>
+                        <Button x:Name="DeleteDuplicatesButton" Content="删除重复文件" Style="{StaticResource ActionButton}" Margin="8,0,0,0" Foreground="#AD3D32" BorderBrush="#E9BFB8" IsEnabled="False" Visibility="Collapsed" Click="DeleteDuplicates"/>
+                    </StackPanel>
+                </WrapPanel>
+                <TextBlock x:Name="ScanPolicyText" Text="扫描只读 · 修改前需确认" Foreground="#7A8090" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

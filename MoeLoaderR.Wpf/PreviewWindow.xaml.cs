@@ -22,7 +22,8 @@ public partial class PreviewWindow
     public BitmapImage PreviewBitmapImage { get; set; }
     private Point _previousDragOffset;
     private readonly System.Windows.Threading.DispatcherTimer _qualityTimer = new() { Interval = TimeSpan.FromMilliseconds(160) };
-    public CancellationTokenSource Cts { get; set; }
+    private CancellationTokenSource _loadCts;
+    private bool _closed;
         
     public PreviewWindow()
     {
@@ -37,7 +38,20 @@ public partial class PreviewWindow
             _qualityTimer.Stop();
             RenderOptions.SetBitmapScalingMode(LargeImage, BitmapScalingMode.HighQuality);
         };
-        Closed += (_, _) => { _qualityTimer.Stop(); Cts?.Cancel(); };
+        Closed += (_, _) =>
+        {
+            _closed = true;
+            _loadCts?.Cancel();
+            _qualityTimer.Stop();
+            LargeImageThumb.CancelDrag();
+            LargeImage.Source = null;
+            PreviewBitmapImage = null;
+            CurrentMoeItem = null;
+            Settings = null;
+            DataContext = null;
+            PoolsWrapPanel.Children.Clear();
+            TagsWrapPanel.Children.Clear();
+        };
         KeyDown += OnKeyDown;
     }
 
@@ -49,40 +63,49 @@ public partial class PreviewWindow
         }
     }
 
-    public static void Show(PreviewWindow thisWnd , Window wnd, MoeItem moeitem, ImageSource imgSource)
+    public async Task InitAsync(MoeItem item, ImageSource thumbnail)
     {
-        if (thisWnd == null)
+        if (_closed) return;
+        if (ReferenceEquals(CurrentMoeItem, item) && (PreviewBitmapImage != null || _loadCts != null)) return;
+        _loadCts?.Cancel();
+        using var request = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        _loadCts = request;
+        bool IsCurrent() => !_closed && ReferenceEquals(_loadCts, request) && !request.IsCancellationRequested;
+        try
         {
-            thisWnd = new PreviewWindow();
-            thisWnd.Closed += delegate { thisWnd = null; };
-            thisWnd.Owner = wnd;
-            thisWnd.Width = wnd.Width * 0.85d;
-            thisWnd.Height = wnd.Height * 0.85d;
-            thisWnd.Show();
+            CurrentMoeItem = item;
+            Settings = item.Site.Settings;
+            DataContext = Settings;
+            _qualityTimer.Stop();
+            LargeImageThumb.CancelDrag();
+            RenderOptions.SetBitmapScalingMode(LargeImage, BitmapScalingMode.HighQuality);
+            LargeImage.Source = null;
+            PreviewBitmapImage = null;
+            DisplayItemInfo();
+            ImageLoadProgressBar.Value = 0;
+            RootGrid.GoElementState(nameof(LoadingBarShowState));
+            if (item.Urls.GetPreview() == null) return;
+            var progress = new Progress<int>(value => { if (IsCurrent()) ImageLoadProgressBar.Value = value; });
+            var image = await LoadImageAsync(item, request.Token, progress);
+            if (!IsCurrent()) return;
+            PreviewBitmapImage = image;
+            SetImage(image);
+            InitImagePosition();
         }
-        else
+        catch (OperationCanceledException) when (request.IsCancellationRequested) { }
+        catch (Exception ex)
         {
-            thisWnd.Activate();
+            if (IsCurrent()) Ex.Log($"预览加载失败：{item.DetailUrl}", ex);
         }
-
-        thisWnd.Init(moeitem, imgSource);
+        finally
+        {
+            if (ReferenceEquals(_loadCts, request))
+            {
+                _loadCts = null;
+                if (!_closed) RootGrid.GoElementState(nameof(LoadingBarHideState));
+            }
+        }
     }
-
-    public async void Init(MoeItem moeitem, ImageSource imgSource)
-    {
-        CurrentMoeItem = moeitem;
-        Settings = moeitem.Site.Settings;
-        DataContext = Settings;
-        var info = CurrentMoeItem.Urls.GetPreview();
-        if(info == null )return;
-        DisplayItemInfo();
-        RootGrid.GoElementState(nameof(LoadingBarShowState));
-        ImageLoadProgressBar.Value = 0;
-        await LoadImageAsync();
-        RootGrid.GoElementState(nameof(LoadingBarHideState));
-        InitImagePosition();
-    }
-
     public void DisplayItemInfo()
     {
         var i = CurrentMoeItem;
@@ -207,57 +230,20 @@ public partial class PreviewWindow
     /// <summary>
     /// 异步加载图片
     /// </summary>
-    public async Task<Exception> LoadImageAsync()
+    private async Task<BitmapImage> LoadImageAsync(MoeItem item, CancellationToken token, IProgress<int> progress)
     {
-        // client
-
-        var net = CurrentMoeItem.Site.GetCloneNet(CurrentMoeItem.ThumbnailUrlInfo.Referer, 30d);
-        net.ReceiveProgressHandler.ProgressChanged += OnReceiveProgress;
-        Exception loadEx = null;
+        var info = item.Urls.GetPreview();
+        var net = item.Site.GetCloneNet(info.Referer, 30d);
+        using var client = net.Client;
+        Action<int> onProgress = value => progress.Report(value);
+        net.ReceiveProgressHandler.ProgressChanged += onProgress;
         try
         {
-            Cts?.Cancel();
-            Cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var response = await net.Client.GetAsync(CurrentMoeItem.Urls.GetPreview().Url, Cts.Token);
-            await using Stream stream = await response.Content.ReadAsStreamAsync();
-            BitmapImage Func()
-            {
-                return UiUtility.GetBitmapImageFromStream(stream);
-            }
-            var source = await Task.Run(Func, Cts.Token);
-
-            if (source != null)
-            {
-                PreviewBitmapImage = source;
-                SetImage(source);
-            }
+            using var response = await client.GetAsync(info.Url, token);
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync(token);
+            return await Task.Run(() => UiUtility.GetBitmapImageFromStream(stream), token);
         }
-        catch (Exception ex)
-        {
-            loadEx = ex;
-        }
-
-        if (loadEx == null)
-        {
-
-            //this.Sb("LoadedImageSb").Begin();
-        }
-        else
-        {
-            //this.Sb("LoadFailSb").Begin();
-            Ex.Log(loadEx.Message, loadEx.StackTrace);
-            Ex.Log($"{CurrentMoeItem.ThumbnailUrlInfo.Url} 图片加载失败");
-        }
-
-        return loadEx;
-    }
-
-    private void OnReceiveProgress(int percentage)
-    {
-        Dispatcher.BeginInvoke(new Action(() =>
-        {
-            ImageLoadProgressBar.Value = percentage;
-        }));
-
+        finally { net.ReceiveProgressHandler.ProgressChanged -= onProgress; }
     }
 }
